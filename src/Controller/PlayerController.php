@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 class PlayerController extends AbstractController
 {
@@ -15,10 +16,10 @@ class PlayerController extends AbstractController
     public function createPlayer(Request $request, EntityManagerInterface $entityManager): JsonResponse {
         
         $data = json_decode(json: $request->getContent(), associative: true);
-        
+
         $player = new Player();
-        $player->setFirstName(firstName: $data['firstName'] ?? '');
-        $player->setLastName(lastName: $data['lastNAme'] ?? '');
+        $player->setFirstName(FirstName: $data['firstName'] ?? '');
+        $player->setLastName(LastName: $data['lastName'] ?? '');
 
         $entityManager->persist($player);
         $entityManager->flush();
@@ -60,7 +61,7 @@ class PlayerController extends AbstractController
             }, array: $players)]) ;
     }
 
-    #[Route('/player/edit/{id}', methods: ['PUT'])]
+    #[Route('/player/{id}', methods: ['PUT'])]
     public function update( Request $request, EntityManagerInterface $entityManager, int $id): Response
     {
 
@@ -74,16 +75,16 @@ class PlayerController extends AbstractController
             );
         }
 
-        $player->setFirstName(firstName: $data['firstName'] ?? '');
-        $player->setLastName(lastName: $data['lastName'] ?? '');
+        $player->setFirstName(FirstName: $data['firstName'] ?? '');
+        $player->setLastName(LastName: $data['lastName'] ?? '');
         $entityManager->flush();
 
-        return $this->redirectToRoute('player_show', [
-            'id' => $player->getId()
-        ]);
+        return $this->json(['id'=> $player->getId() ,
+        'name' => $player->getFirstName().' '.$player->getLastName(),
+        'team' => $player->getTeam() ? $player->getTeam() : 'None' ], 201);
     }
 
-    #[Route('/player/delete/{id}', methods: ['DELETE'])]
+    #[Route('/player/{id}', methods: ['DELETE'])]
     public function delete(EntityManagerInterface $entityManager, int $id): JsonResponse {
         $player = $entityManager->getRepository(Player::class)->find($id);
 
