@@ -3,12 +3,15 @@
 namespace App\Controller;
 
 use App\Entity\Player;
+use App\Entity\Team;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
 class PlayerController extends AbstractController
 {
@@ -17,20 +20,30 @@ class PlayerController extends AbstractController
         
         $data = json_decode(json: $request->getContent(), associative: true);
 
+        $team = $entityManager->getRepository(Team::class)->find($data['teamId'] ?? null);
+
+        if(!$team) {
+            throw $this->createNotFoundException(
+                'No player found for id '.$id
+            );
+        }
+
         $player = new Player();
         $player->setFirstName(FirstName: $data['firstName'] ?? '');
         $player->setLastName(LastName: $data['lastName'] ?? '');
+        $player->setTeam(Team: $team);
 
         $entityManager->persist($player);
         $entityManager->flush();
 
         return $this->json(['id'=> $player->getId() ,
         'name' => $player->getFirstName().' '.$player->getLastName(),
-        'team' => $player->getTeam() ? $player->getTeam() : 'None' ], 201);
+        'team' => $player->getTeam() ? $player->getTeam()->getName() : 'None' ], 201);
     }
 
     #[Route('/player/{id}', methods: ['GET'])]
     public function show(EntityManagerInterface $entityManager, int $id): JsonResponse {
+
         $player = $entityManager->getRepository(Player::class)->find($id);
 
         if(!$player) {
@@ -66,10 +79,17 @@ class PlayerController extends AbstractController
     {
 
         $data = json_decode(json: $request->getContent(), associative: true);
-
+        
         $player = $entityManager->getRepository(Player::class)->find($id);
-
         if (!$player) {
+            throw $this->createNotFoundException(
+                'No player found for id '.$id
+            );
+        }
+
+        $team = $entityManager->getRepository(Team::class)->find($data['teamId'] ?? null);
+
+        if(!$team) {
             throw $this->createNotFoundException(
                 'No player found for id '.$id
             );
@@ -77,11 +97,12 @@ class PlayerController extends AbstractController
 
         $player->setFirstName(FirstName: $data['firstName'] ?? '');
         $player->setLastName(LastName: $data['lastName'] ?? '');
+        $player->setTeam(Team: $team);
         $entityManager->flush();
 
         return $this->json(['id'=> $player->getId() ,
         'name' => $player->getFirstName().' '.$player->getLastName(),
-        'team' => $player->getTeam() ? $player->getTeam() : 'None' ], 201);
+        'team' => $player->getTeam() ? $player->getTeam()->getName() : 'None' ], 201);
     }
 
     #[Route('/player/{id}', methods: ['DELETE'])]
