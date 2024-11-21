@@ -53,7 +53,7 @@ class PlayerController extends AbstractController
         }
         return $this->json(['id'=> $player->getId() ,
                             'name' => $player->getFirstName().' '.$player->getLastName(),
-                            'team' => $player->getTeam() ? $player->getTeam() : 'None' ], 201) ;
+                            'team' => $player->getTeam() ? $player->getTeam()->getName() : 'None' ], 201) ;
     }
 
     #[Route('/players', methods: ['GET'])]
@@ -69,7 +69,7 @@ class PlayerController extends AbstractController
                 return [
                     'id' => $player->getId(),
                     'name' => $player->getFirstName().' '.$player->getLastName(),
-                    'team' => $player->getTeam() ? $player->getTeam() : 'None',
+                    'team' => $player->getTeam() ? $player->getTeam()->getName() : 'None',
                 ];
             }, array: $players)]) ;
     }
